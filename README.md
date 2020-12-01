@@ -9,8 +9,8 @@ Execution:
   3. python3 worker.py 4000 1
   4. python3 worker.py 4001 2
   5. python3 worker.py 4002 3
-  6. python3 Analysis.py <alg>       
-  //alg = Random or Round or Least
+  6. python3 Analysis.py <scheduling_algorithm>       
+  //scheduling_algorithm = Random or Round or Least
 
 
    
