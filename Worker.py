@@ -34,41 +34,45 @@ def connectionSocket(information):
 
 
 
-def sendUpdate(job_id, task_id, w_id, job_type, start_time, end_time):
+def sendUpdate(j_id, t_id, w_id, j_type, s_time, e_time):
 
 	# DICTIONARY FOR MASTER
-	info = {'job_id': job_id, 'job_type': job_type, 'task_id': task_id, 'w_id': w_id, 'start_time': start_time, 'end_time': end_time}
+	info = {'job_id': j_id, 'job_type': j_type, 'task_id': t_id, 'w_id': w_id, 'start_time': s_time, 'end_time': e_time}
 	# CONNECTION TO MASTER HERE
 	connectionSocket(info)
 	
+
+def ProcessRequest(r,w_id):
+	request = json.loads(r)
+	request['start_time'] = time.time()
+	request['end_time'] = request['start_time'] + request['duration']	# Add task completion time to request dict
+	lockk.acquire()
+	pool.append([w_id, request])				# Add request to the executing pool
+	lockk.release()
+
+
 def worker1(port, w_id):
 	global pool
 	while(1):
 		taskLaunchSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		taskLaunchSocket.connect(("localhost", port))
-		r = taskLaunchSocket.recv(1024)					# Read task
-		req = ""
-		while r:
-			req += r.decode()
-			r = taskLaunchSocket.recv(1024)
-		if(req):
-			request = json.loads(req)
-			request['start_time'] = time.time()
-			request['end_time'] = request['start_time'] + request['duration']	# Add task completion time to request dict
-			lockk.acquire()
-			pool.append([w_id, request])				# Add request to the executing pool
-			lockk.release()
+		recieve = taskLaunchSocket.recv(1024)					# Read task
+		requestMessage = ""
+		while recieve:
+			requestMessage += recieve.decode()
+			recieve = taskLaunchSocket.recv(1024)
+		if(requestMessage):
+			ProcessRequest(requestMessage,w_id)
 		else:
 			break
 		taskLaunchSocket.close()
 		
 	
-t1 = threading.Thread(target = worker1, args = (int(sys.argv[1]),int(sys.argv[2])))	
-t2 = threading.Thread(target = execution, name = "Another thread")			
-								
+thread1 = threading.Thread(target = worker1, args = (int(sys.argv[1]),int(sys.argv[2])))	
+thread2 = threading.Thread(target = execution, name = "Another thread")			
 
-t1.start()
-t2.start()
 
-t1.join()
-t2.join()
+thread1.start()
+thread2.start()
+thread1.join()
+thread2.join()
