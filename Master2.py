@@ -7,8 +7,6 @@ import threading
 import copy
 import numpy as np
 
-
-
 requests = []
 finishRequests = {}
 
@@ -98,9 +96,9 @@ def randomScheduling(chosenTask):
 		configurationLock.acquire()
 	currentConfiguration['workers'][workerNumber]['slots']-=1
 	configurationLock.release()
-	print(chosenTask)
+	#print(chosenTask)
 	sendToWorker(chosenTask,workerNumber)
-	print('Task with task id ',chosenTask['task_id'],' is being scheduled on worker with id',currentConfiguration['workers'][workerNumber]['worker_id'])
+	#print('Task with task id ',chosenTask['task_id'],' is being scheduled on worker with id',currentConfiguration['workers'][workerNumber]['worker_id'])
 
 def roundRobin(chosenTask):
 	numberOfWorkers = len(currentConfiguration['workers'])
@@ -112,9 +110,9 @@ def roundRobin(chosenTask):
 		configurationLock.acquire()
 	currentConfiguration['workers'][workerNumber]['slots']-=1
 	configurationLock.release()
-	print(chosenTask)
+	#print(chosenTask)
 	sendToWorker(chosenTask,workerNumber)
-	print('Task with task id ',chosenTask['task_id'],' is being scheduled on worker with id',currentConfiguration['workers'][workerNumber]['worker_id'])
+	#print('Task with task id ',chosenTask['task_id'],' is being scheduled on worker with id',currentConfiguration['workers'][workerNumber]['worker_id'])
 
 
 def leastLoaded(chosenTask):
@@ -135,9 +133,9 @@ def leastLoaded(chosenTask):
 		configurationLock.acquire()
 	currentConfiguration['workers'][minLoadingIndex]['slots']-=1
 	configurationLock.release()
-	print(chosenTask)
+	#print(chosenTask)
 	sendToWorker(chosenTask,workerNumber)
-	print('Task with task id ',chosenTask['task_id'],' is being scheduled on worker with id',currentConfiguration['workers'][minLoadingIndex]['worker_id'])
+	#print('Task with task id ',chosenTask['task_id'],' is being scheduled on worker with id',currentConfiguration['workers'][minLoadingIndex]['worker_id'])
 
 
 
@@ -174,7 +172,7 @@ def scanSchedule():
 					break
 				#schedule reducers
 				elif len(finishRequests[j['job_id']])==0:
-					print(j,j['reduce_tasks'],' IS J REDUCE TASKS')
+					#print(j,j['reduce_tasks'],' IS J REDUCE TASKS')
 					chosenTask = j['reduce_tasks'][0]
 					j['reduce_tasks'] = j['reduce_tasks'][1:]
 					findTask=True
