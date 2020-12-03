@@ -25,7 +25,7 @@ configuration = json.loads(f.read())
 print(configuration)
 
 requestSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-#requestSocket.settimeout(20.0)
+requestSocket.settimeout(20.0)
 requestSocket.bind(("localhost", 5000))
 requestSocket.listen(1)
 
@@ -43,9 +43,9 @@ workerSocket3.listen(1)
 
 
 listenUpdateSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-#listenUpdateSocket.settimeout(100.0)
+listenUpdateSocket.settimeout(20.0)
 listenUpdateSocket.bind(("localhost", 5001))
-listenUpdateSocket.listen(1)
+listenUpdateSocket.listen(3)
 #listenUpdateSocket.settimeout(100.0)
 
 # jobLogs = {}
@@ -62,11 +62,17 @@ configurationLock = threading.Lock()
 def acceptRequest():
 	global countJobs
 	while 1:
-		connection , addr = requestSocket.accept()
-		data = connection.recv(1024)
-		# De-serializing data
-		data_loaded = json.loads(data)
-		connection.close()
+		try:
+			conn,addr = requestSocket.accept()
+		except:
+			break
+		u = conn.recv(1024).decode()							# Read task completion info
+		update = ""
+		while(len(u)!=0):
+			update += u
+			u = conn.recv(1024).decode()
+		data_loaded = json.loads(update)
+		conn.close()
 
 		if(data_loaded):
 			countJobsLock.acquire()
@@ -76,8 +82,8 @@ def acceptRequest():
 			jobRequest = data_loaded
 			jobRequestLock.release()
 			requests.append(jobRequest)
-		print(jobRequest)
-		print(countJobs)
+			print(jobRequest)
+			print(countJobs)
 
 
 
@@ -221,10 +227,16 @@ def scanSchedule():
 
 def recieveUpdates():
 	while 1:
-		conn,addr = listenUpdateSocket.accept()
-		data = conn.recv(1024)
-		# De-serializing data
-		data_loaded = json.loads(data)
+		try:
+			conn, addr = listenUpdateSocket.accept()
+		except:
+			break
+		r = conn.recv(1024)						# Read job request
+		req = ""
+		while r:							# If len(req) > 1024b
+			req += r.decode()
+			r = conn.recv(1024)
+		data_loaded = json.loads(req)					
 		conn.close()
 		print(data_loaded,' is what we recieve from worker')
 		configurationLock.acquire()
@@ -252,23 +264,21 @@ def recieveUpdates():
 		print(currentConfiguration,' is current configuration')
 
 thread1 = threading.Thread(target = acceptRequest)
-thread2 = threading.Thread(target = scanSchedule)
+thread2 = threading.Thread(target = scanSchedule, daemon = True)
 thread3 = threading.Thread(target = recieveUpdates)
 thread1.start()
 thread2.start()
 thread3.start()
 
 
-
 thread1.join()
-thread2.join()
 thread3.join()
+thread2.killed = True
 
-#requestSocket.close()
-#workerSocket1.close()
-#workerSocket2.close()
-#workerSocket3.close()
-#listenUpdateSocket.close()
-
-
-print(taskLogs,' was final task log')
+requestSocket.close()
+listenUpdateSocket.close()
+workerSocket1.close()
+workerSocket2.close()
+workerSocket3.close()
+print('LOOOOGGGSS')
+exit(0)
