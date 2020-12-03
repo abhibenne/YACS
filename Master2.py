@@ -9,14 +9,16 @@ import numpy as np
 
 requests = []
 finishRequests = {}
-
+finishReducer = {}
 #toFinishMap = []
 jobRequest = {}
+
 
 countJobs = 0
 countJobsLock = threading.Lock()
 jobRequestLock = threading.Lock()
 finishRequestsLock = threading.Lock()
+finishReducerLock = threading.Lock()
 
 configPath = sys.argv[1]
 scheduleMethod = sys.argv[2]
@@ -208,12 +210,16 @@ def scanSchedule():
 				elif len(finishRequests[j['job_id']])==0:
 					#print(j,j['reduce_tasks'],' IS J REDUCE TASKS')
 					chosenTask = j['reduce_tasks'][0]
+					finishReducer[j[job_id]] = []
+					if j['job_id'] not in finishRequests.keys():
+						finishReducer[j['job_id']]=[]
+					finishReducer[j['job_id']].append(chosenTask)
 					j['reduce_tasks'] = j['reduce_tasks'][1:]
 					findTask=True
 					if(len(j['reduce_tasks'])==0):
-						jobLogsLock.acquire()
-						jobLogs[j['job_id']] = time.time()-jobLogs[j['job_id']] 
-						jobLogsLock.release()
+						#jobLogsLock.acquire()
+						#jobLogs[j['job_id']] = time.time()-jobLogs[j['job_id']] 
+						#jobLogsLock.release()
 						requests.remove(j)
 						rOver = True
 					break
@@ -268,6 +274,14 @@ def recieveUpdates():
 			#print(curr_task, ' is the task to remove')
 			finishRequests[job_id].remove(curr_task)
 			finishRequestsLock.release()
+		else:
+			finishReducerLock.acquire()
+			finishReducer[job_id].remove(curr_task)
+			if(len(finishReducer)==0):
+				jobLogsLock.acquire()
+				jobLogs[job_id] = curr_task['end_time'] - jobLogs[job_id]	# Update duration of job
+				jobLogsLock.release()
+			finishReducerLock.release()
 		#print(taskLogs,' that was TASK_LOG')
 		#print(currentConfiguration,' is current configuration')
 
