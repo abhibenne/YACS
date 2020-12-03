@@ -5,6 +5,7 @@ import threading
 import time
 
 
+
 # task comes as {task_id,duration}
 executionList = []
 executionListLock = threading.Lock()
@@ -26,6 +27,7 @@ def listenRequest():
 def executionDetails(task):
 	detailsToMaster= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	detailsToMaster.connect(("localhost", 5001))
+	#conn, addr = workerSocket3.accept()
 	message = json.dumps(task)
 	detailsToMaster.send(message.encode())
 	detailsToMaster.close()

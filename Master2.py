@@ -11,13 +11,14 @@ import numpy as np
 
 requests = []
 finishRequests = {}
+
 #toFinishMap = []
 jobRequest = {}
 
 countJobs = 0
 countJobsLock = threading.Lock()
 jobRequestLock = threading.Lock()
-
+finishRequestsLock = threading.Lock()
 
 configPath = sys.argv[1]
 scheduleMethod = sys.argv[2]
@@ -40,6 +41,11 @@ workerSocket2.listen(1)
 workerSocket3 = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 workerSocket3.bind(("localhost", configuration['workers'][2]['port']))
 workerSocket3.listen(1)
+
+
+listenUpdateSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+listenUpdateSocket.bind(("localhost", 5001))
+listenUpdateSocket.listen(1)
 
 
 currentConfiguration = copy.deepcopy(configuration)
@@ -76,7 +82,7 @@ def sendToWorker(chosenTask,workerNumber):
 		conn, addr = workerSocket2.accept()
 	if(workerNumber == 2):
 		conn, addr = workerSocket3.accept()
-
+	chosenTask['workerNumber']=workerNumber
 	conn.send((json.dumps(chosenTask)).encode())
 	conn.close()
 
@@ -156,14 +162,16 @@ def scanSchedule():
 				if(len(j['map_tasks'])):
 					chosenTask = j['map_tasks'][0]
 					#toFinishMap.append(j['map_tasks'][0])
+					finishRequestsLock.acquire()
 					if j['job_id'] not in finishRequests.keys():
 						finishRequests[j['job_id']]=[]
 					finishRequests[j['job_id']].append(chosenTask)
+					finishRequestsLock.release()
 					j['map_tasks'] = j['map_tasks'][1:]
 					findTask=True
 					break
 					# mapper left so have to do mapper
-				'''
+				elif len(finishRequests[j['job_id']])==0:
 					chosenTask = j['reduce_tasks'][0]
 					j['reduce_tasks'] = j['reduce_tasks'][1:]
 					findTask=True
@@ -171,10 +179,8 @@ def scanSchedule():
 						rOver = True
 					break
 					#schedule reducers
-
 			if rOver:
 				requests = requests[1:]
-				'''
 			#print('seems free')
 			if findTask and scheduleMethod == 'random':
 				randomScheduling(chosenTask)
@@ -186,11 +192,35 @@ def scanSchedule():
 				leastLoaded(chosenTask)
 				pass
 
+def recieveUpdates():
+	while 1:
+		conn,addr = listenUpdateSocket.accept()
+		data = conn.recv(1024)
+		# De-serializing data
+		data_loaded = json.loads(data)
+		conn.close()
+		print(data_loaded,' is what we recieve from worker')
+		configurationLock.acquire()
+		currentConfiguration['workers'][data_loaded['workerNumber']]['slots']+=1
+		configurationLock.release()
+		job_id = data_loaded['task_id'][:data_loaded['task_id'].find('_')]
+		curr_task = {}
+		curr_task['task_id']=data_loaded['task_id']
+		curr_task['duration']=data_loaded['duration']
+		curr_task['workerNumber']=data_loaded['workerNumber']
+		if data_loaded['task_id'][data_loaded['task_id'].find('_')+1] == 'M':
+			finishRequestsLock.acquire()
+			#print(finishRequests[job_id],' is the finish requests list')
+			#print(curr_task, ' is the task to remove')
+			finishRequests[job_id].remove(curr_task)
+			finishRequestsLock.release()
 
 thread1 = threading.Thread(target = acceptRequest)
 thread2 = threading.Thread(target = scanSchedule)
-#thread3 = threading.Thread(target = reciveUpdates)
+thread3 = threading.Thread(target = recieveUpdates)
 thread1.start()
 thread2.start()
+thread3.start()
 thread1.join()
 thread2.join()
+thread3.join()
