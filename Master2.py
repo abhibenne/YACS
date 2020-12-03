@@ -205,9 +205,11 @@ def scanSchedule():
 					#finishRequestsLock.release()
 					j['map_tasks'] = j['map_tasks'][1:]
 					findTask=True
+					finishRequestsLock.release()
 					break
 				#schedule reducers
 				elif len(finishRequests[j['job_id']])==0:
+					finishRequestsLock.release()
 					#print(j,j['reduce_tasks'],' IS J REDUCE TASKS')
 					chosenTask = j['reduce_tasks'][0]
 					if j['job_id'] not in finishReducer.keys():
@@ -216,15 +218,16 @@ def scanSchedule():
 					j['reduce_tasks'] = j['reduce_tasks'][1:]
 					findTask=True
 					if(len(j['reduce_tasks'])==0):
-						#jobLogsLock.acquire()
-						#jobLogs[j['job_id']] = time.time()-jobLogs[j['job_id']] 
-						#jobLogsLock.release()
+						jobLogsLock.acquire()
+						jobLogs[j['job_id']] = time.time()-jobLogs[j['job_id']] 
+						jobLogsLock.release()
 						requests.remove(j)
 						rOver = True
 					break
-				finishRequestsLock.release()
-			if findTask:
-				finishRequestsLock.release()		
+				else:
+					finishRequestsLock.release()
+			#if findTask:
+			#	finishRequestsLock.release()		
 			#if rOver:
 				#requests = requests[1:]
 			#print('seems free')
