@@ -25,29 +25,21 @@ f = open(configPath)
 configuration = json.loads(f.read())
 print(configuration)
 
-
 requestSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 requestSocket.bind(("localhost", 5000))
 requestSocket.listen(1)
-
 
 workerSocket1 = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 workerSocket1.bind(("localhost", configuration['workers'][0]['port']))
 workerSocket1.listen(1)
 
-
-
 workerSocket2 = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 workerSocket2.bind(("localhost", configuration['workers'][1]['port']))
 workerSocket2.listen(1)
 
-
-
 workerSocket3 = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 workerSocket3.bind(("localhost", configuration['workers'][2]['port']))
 workerSocket3.listen(1)
-
-
 
 
 currentConfiguration = copy.deepcopy(configuration)
@@ -85,7 +77,7 @@ def sendToWorker(chosenTask,workerNumber):
 	if(workerNumber == 2):
 		conn, addr = workerSocket3.accept()
 
-	conn.send(chosenTask.encode())
+	conn.send((json.dumps(chosenTask)).encode())
 	conn.close()
 
 
@@ -196,8 +188,8 @@ def scanSchedule():
 
 
 thread1 = threading.Thread(target = acceptRequest)
-
 thread2 = threading.Thread(target = scanSchedule)
+#thread3 = threading.Thread(target = reciveUpdates)
 thread1.start()
 thread2.start()
 thread1.join()
