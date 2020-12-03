@@ -48,7 +48,8 @@ listenUpdateSocket.bind(("localhost", 5001))
 listenUpdateSocket.listen(3)
 #listenUpdateSocket.settimeout(100.0)
 
-# jobLogs = {}
+jobLogs = {}
+jobLogsLock = threading.Lock()
 # job_id: time
 taskLogs = {}
 taskLogsLock = threading.Lock()
@@ -81,9 +82,13 @@ def acceptRequest():
 			jobRequestLock.acquire()
 			jobRequest = data_loaded
 			jobRequestLock.release()
+			jobLogsLock.acquire()
+			jobLogs[data_loaded['job_id']] = time.time()
+			jobLogsLock.release()
+
 			requests.append(jobRequest)
-			print(jobRequest)
-			print(countJobs)
+			#print(jobRequest)
+			#print(countJobs)
 
 
 
@@ -206,6 +211,9 @@ def scanSchedule():
 					j['reduce_tasks'] = j['reduce_tasks'][1:]
 					findTask=True
 					if(len(j['reduce_tasks'])==0):
+						jobLogsLock.acquire()
+						jobLogs[j['job_id']] = time.time()-jobLogs[j['job_id']] 
+						jobLogsLock.release()
 						requests.remove(j)
 						rOver = True
 					break
@@ -238,7 +246,7 @@ def recieveUpdates():
 			r = conn.recv(1024)
 		data_loaded = json.loads(req)					
 		conn.close()
-		print(data_loaded,' is what we recieve from worker')
+		#print(data_loaded,' is what we recieve from worker')
 		configurationLock.acquire()
 		currentConfiguration['workers'][data_loaded['workerNumber']]['slots']+=1
 		configurationLock.release()
@@ -251,7 +259,7 @@ def recieveUpdates():
 		taskLogs[data_loaded['task_id']] = []
 		taskLogs[data_loaded['task_id']].append(data_loaded['end_time']-data_loaded['start_time'])
 		#configurationLock.acquire()
-		taskLogs[data_loaded['task_id']].append(currentConfiguration['workers'][data_loaded['workerNumber']])
+		taskLogs[data_loaded['task_id']].append(currentConfiguration['workers'][data_loaded['workerNumber']]['worker_id'])
 		#configurationLock.acquire()
 		taskLogsLock.release()
 		if data_loaded['task_id'][data_loaded['task_id'].find('_')+1] == 'M':
@@ -261,7 +269,7 @@ def recieveUpdates():
 			finishRequests[job_id].remove(curr_task)
 			finishRequestsLock.release()
 		#print(taskLogs,' that was TASK_LOG')
-		print(currentConfiguration,' is current configuration')
+		#print(currentConfiguration,' is current configuration')
 
 thread1 = threading.Thread(target = acceptRequest)
 thread2 = threading.Thread(target = scanSchedule, daemon = True)
@@ -280,5 +288,6 @@ listenUpdateSocket.close()
 workerSocket1.close()
 workerSocket2.close()
 workerSocket3.close()
-print('LOOOOGGGSS')
+print(taskLogs)
+print(jobLogs)
 exit(0)
