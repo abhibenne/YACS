@@ -25,6 +25,7 @@ configuration = json.loads(f.read())
 print(configuration)
 
 requestSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+#requestSocket.settimeout(20.0)
 requestSocket.bind(("localhost", 5000))
 requestSocket.listen(1)
 
@@ -42,9 +43,16 @@ workerSocket3.listen(1)
 
 
 listenUpdateSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+#listenUpdateSocket.settimeout(100.0)
 listenUpdateSocket.bind(("localhost", 5001))
 listenUpdateSocket.listen(1)
+#listenUpdateSocket.settimeout(100.0)
 
+# jobLogs = {}
+# job_id: time
+taskLogs = {}
+taskLogsLock = threading.Lock()
+# task_id: [time,worker]
 
 currentConfiguration = copy.deepcopy(configuration)
 configurationLock = threading.Lock()
@@ -170,6 +178,7 @@ def scanSchedule():
 			chosenTask = {}
 			rOver=False
 			findTask = False
+
 			for j in requests:
 				finishRequestsLock.acquire()
 				# mapper left so have to do mapper
@@ -226,12 +235,21 @@ def recieveUpdates():
 		curr_task['task_id']=data_loaded['task_id']
 		curr_task['duration']=data_loaded['duration']
 		curr_task['workerNumber']=data_loaded['workerNumber']
+		taskLogsLock.acquire()
+		taskLogs[data_loaded['task_id']] = []
+		taskLogs[data_loaded['task_id']].append(data_loaded['end_time']-data_loaded['start_time'])
+		#configurationLock.acquire()
+		taskLogs[data_loaded['task_id']].append(currentConfiguration['workers'][data_loaded['workerNumber']])
+		#configurationLock.acquire()
+		taskLogsLock.release()
 		if data_loaded['task_id'][data_loaded['task_id'].find('_')+1] == 'M':
 			finishRequestsLock.acquire()
 			#print(finishRequests[job_id],' is the finish requests list')
 			#print(curr_task, ' is the task to remove')
 			finishRequests[job_id].remove(curr_task)
 			finishRequestsLock.release()
+		#print(taskLogs,' that was TASK_LOG')
+		print(currentConfiguration,' is current configuration')
 
 thread1 = threading.Thread(target = acceptRequest)
 thread2 = threading.Thread(target = scanSchedule)
@@ -239,6 +257,18 @@ thread3 = threading.Thread(target = recieveUpdates)
 thread1.start()
 thread2.start()
 thread3.start()
+
+
+
 thread1.join()
 thread2.join()
 thread3.join()
+
+#requestSocket.close()
+#workerSocket1.close()
+#workerSocket2.close()
+#workerSocket3.close()
+#listenUpdateSocket.close()
+
+
+print(taskLogs,' was final task log')
