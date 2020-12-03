@@ -74,15 +74,20 @@ def acceptRequest():
 
 
 def sendToWorker(chosenTask,workerNumber):
+	chosenTask['workerNumber']=workerNumber
 	if(workerNumber == 0):
 		conn, addr = workerSocket1.accept()
+		conn.send((json.dumps(chosenTask)).encode())
+		conn.close()
 	if(workerNumber == 1):
 		conn, addr = workerSocket2.accept()
+		conn.send((json.dumps(chosenTask)).encode())
+		conn.close()
 	if(workerNumber == 2):
 		conn, addr = workerSocket3.accept()
-	chosenTask['workerNumber']=workerNumber
-	conn.send((json.dumps(chosenTask)).encode())
-	conn.close()
+		conn.send((json.dumps(chosenTask)).encode())
+		conn.close()
+	
 
 
 
@@ -119,23 +124,32 @@ def leastLoaded(chosenTask):
 	numberOfWorkers = len(currentConfiguration['workers'])
 	workerNumber=0
 	minLoading = -1e9
-	minLoadingIndex = 0
+	minLoadingIndex = -1
 	configurationLock.acquire()
-	while currentConfiguration['workers'][workerNumber]['slots'] == 0:
-		noSlots = currentConfiguration['workers'][workerNumber]['slots']
+	#while currentConfiguration['workers'][workerNumber]['slots'] == 0:
+	for i in currentConfiguration['workers']:
+		noSlots = i['slots']
 		configurationLock.release()
-		if minLoading<noSlots:
+		if minLoading<noSlots and noSlots!=0:
 			minLoading=noSlots
 			minLoadingIndex=workerNumber 
 		workerNumber = (workerNumber+1)
-		if workerNumber==numberOfWorkers:
-			break;
+		#if workerNumber==numberOfWorkers:
+		#	break;
 		configurationLock.acquire()
-	currentConfiguration['workers'][minLoadingIndex]['slots']-=1
+	#print(currentConfiguration)
+	#print(minLoadingIndex)
 	configurationLock.release()
-	#print(chosenTask)
-	sendToWorker(chosenTask,workerNumber)
-	#print('Task with task id ',chosenTask['task_id'],' is being scheduled on worker with id',currentConfiguration['workers'][minLoadingIndex]['worker_id'])
+	
+	if minLoading!=-1e9:
+		configurationLock.acquire()
+		currentConfiguration['workers'][minLoadingIndex]['slots']-=1
+		#print(currentConfiguration)
+		#print(currentConfiguration['workers'][minLoadingIndex]['slots'],' is slots')
+		configurationLock.release()
+		#print(chosenTask)
+		sendToWorker(chosenTask,minLoadingIndex)
+		#print('Task with task id ',chosenTask['task_id'],' is being scheduled on worker with id',currentConfiguration['workers'][minLoadingIndex]['worker_id'])
 
 
 
