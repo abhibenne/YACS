@@ -210,8 +210,7 @@ def scanSchedule():
 				elif len(finishRequests[j['job_id']])==0:
 					#print(j,j['reduce_tasks'],' IS J REDUCE TASKS')
 					chosenTask = j['reduce_tasks'][0]
-					finishReducer[j[job_id]] = []
-					if j['job_id'] not in finishRequests.keys():
+					if j['job_id'] not in finishReducer.keys():
 						finishReducer[j['job_id']]=[]
 					finishReducer[j['job_id']].append(chosenTask)
 					j['reduce_tasks'] = j['reduce_tasks'][1:]
@@ -278,9 +277,9 @@ def recieveUpdates():
 			finishReducerLock.acquire()
 			finishReducer[job_id].remove(curr_task)
 			if(len(finishReducer)==0):
-				jobLogsLock.acquire()
+				#jobLogsLock.acquire()
 				jobLogs[job_id] = curr_task['end_time'] - jobLogs[job_id]	# Update duration of job
-				jobLogsLock.release()
+				#jobLogsLock.release()
 			finishReducerLock.release()
 		#print(taskLogs,' that was TASK_LOG')
 		#print(currentConfiguration,' is current configuration')
