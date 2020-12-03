@@ -68,8 +68,8 @@ def acceptRequest():
 			countJobsLock.release()
 			jobRequestLock.acquire()
 			jobRequest = data_loaded
-			requests.append(jobRequest)
 			jobRequestLock.release()
+			requests.append(jobRequest)
 		print(jobRequest)
 		print(countJobs)
 
@@ -159,28 +159,34 @@ def scanSchedule():
 			rOver=False
 			findTask = False
 			for j in requests:
+				finishRequestsLock.acquire()
+				# mapper left so have to do mapper
 				if(len(j['map_tasks'])):
 					chosenTask = j['map_tasks'][0]
 					#toFinishMap.append(j['map_tasks'][0])
-					finishRequestsLock.acquire()
+					#finishRequestsLock.acquire()
 					if j['job_id'] not in finishRequests.keys():
 						finishRequests[j['job_id']]=[]
 					finishRequests[j['job_id']].append(chosenTask)
-					finishRequestsLock.release()
+					#finishRequestsLock.release()
 					j['map_tasks'] = j['map_tasks'][1:]
 					findTask=True
 					break
-					# mapper left so have to do mapper
+				#schedule reducers
 				elif len(finishRequests[j['job_id']])==0:
+					print(j,j['reduce_tasks'],' IS J REDUCE TASKS')
 					chosenTask = j['reduce_tasks'][0]
 					j['reduce_tasks'] = j['reduce_tasks'][1:]
 					findTask=True
 					if(len(j['reduce_tasks'])==0):
+						requests.remove(j)
 						rOver = True
 					break
-					#schedule reducers
-			if rOver:
-				requests = requests[1:]
+				finishRequestsLock.release()
+			if findTask:
+				finishRequestsLock.release()		
+			#if rOver:
+				#requests = requests[1:]
 			#print('seems free')
 			if findTask and scheduleMethod == 'random':
 				randomScheduling(chosenTask)
