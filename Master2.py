@@ -9,10 +9,8 @@ import numpy as np
 
 
 
-requestSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-requestSocket.bind(("localhost", 5000))
-requestSocket.listen(1)
 requests = []
+finishRequests = {}
 #toFinishMap = []
 jobRequest = {}
 
@@ -26,6 +24,31 @@ scheduleMethod = sys.argv[2]
 f = open(configPath)
 configuration = json.loads(f.read())
 print(configuration)
+
+
+requestSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+requestSocket.bind(("localhost", 5000))
+requestSocket.listen(1)
+
+
+workerSocket1 = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+workerSocket1.bind(("localhost", configuration['workers'][0]['port']))
+workerSocket1.listen(1)
+
+
+
+workerSocket2 = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+workerSocket2.bind(("localhost", configuration['workers'][1]['port']))
+workerSocket2.listen(1)
+
+
+
+workerSocket3 = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+workerSocket3.bind(("localhost", configuration['workers'][2]['port']))
+workerSocket3.listen(1)
+
+
+
 
 currentConfiguration = copy.deepcopy(configuration)
 configurationLock = threading.Lock()
@@ -53,6 +76,20 @@ def acceptRequest():
 		print(countJobs)
 
 
+
+def sendToWorker(chosenTask,workerNumber):
+	if(workerNumber == 0):
+		conn, addr = workerSocket1.accept()
+	if(workerNumber == 1):
+		conn, addr = workerSocket2.accept()
+	if(workerNumber == 2):
+		conn, addr = workerSocket3.accept()
+
+	conn.send(chosenTask.encode())
+	conn.close()
+
+
+
 def randomScheduling(chosenTask):
 	numberOfWorkers = len(currentConfiguration['workers'])
 	workerNumber = np.random.randint(0,numberOfWorkers)
@@ -64,6 +101,7 @@ def randomScheduling(chosenTask):
 	currentConfiguration['workers'][workerNumber]['slots']-=1
 	configurationLock.release()
 	print(chosenTask)
+	sendToWorker(chosenTask,workerNumber)
 	print('Task with task id ',chosenTask['task_id'],' is being scheduled on worker with id',currentConfiguration['workers'][workerNumber]['worker_id'])
 
 def roundRobin(chosenTask):
@@ -77,6 +115,7 @@ def roundRobin(chosenTask):
 	currentConfiguration['workers'][workerNumber]['slots']-=1
 	configurationLock.release()
 	print(chosenTask)
+	sendToWorker(chosenTask,workerNumber)
 	print('Task with task id ',chosenTask['task_id'],' is being scheduled on worker with id',currentConfiguration['workers'][workerNumber]['worker_id'])
 
 
@@ -99,6 +138,7 @@ def leastLoaded(chosenTask):
 	currentConfiguration['workers'][minLoadingIndex]['slots']-=1
 	configurationLock.release()
 	print(chosenTask)
+	sendToWorker(chosenTask,workerNumber)
 	print('Task with task id ',chosenTask['task_id'],' is being scheduled on worker with id',currentConfiguration['workers'][minLoadingIndex]['worker_id'])
 
 
@@ -124,6 +164,9 @@ def scanSchedule():
 				if(len(j['map_tasks'])):
 					chosenTask = j['map_tasks'][0]
 					#toFinishMap.append(j['map_tasks'][0])
+					if j['job_id'] not in finishRequests.keys():
+						finishRequests[j['job_id']]=[]
+					finishRequests[j['job_id']].append(chosenTask)
 					j['map_tasks'] = j['map_tasks'][1:]
 					findTask=True
 					break
