@@ -223,13 +223,13 @@ def scanSchedule():
 			#if rOver:
 				#requests = requests[1:]
 			#print('seems free')
-			if findTask and scheduleMethod == 'random':
+			if findTask and scheduleMethod == 'Random':
 				randomScheduling(chosenTask)
 				pass
-			elif findTask and scheduleMethod == 'RR':
+			elif findTask and scheduleMethod == 'Round':
 				roundRobin(chosenTask)
 				pass
-			elif findTask and scheduleMethod == 'LL':
+			elif findTask and scheduleMethod == 'Least':
 				leastLoaded(chosenTask)
 				pass
 
@@ -288,16 +288,20 @@ listenUpdateSocket.close()
 workerSocket1.close()
 workerSocket2.close()
 workerSocket3.close()
+print("\n\n\n")
+print("Task Logs:\n")
 print(taskLogs)
+print("\n")
+print("Job Logs:\n")
 print(jobLogs)
 
 
-if(sys.argv[2] == 'random'):
-	fileName = "logs_random.txt"
-elif(sys.argv[2] == 'RR'):
-	fileName = "logs_roundRobin.txt"
+if(sys.argv[2] == 'Random'):
+	fileName = "random.txt"
+elif(sys.argv[2] == 'Round'):
+	fileName = "round.txt"
 else:
-	fileName = "logs_leastLoaded.txt"
+	fileName = "least.txt"
 	
 fp = open(fileName, 'w')
 fp.write(json.dumps(taskLogs))
