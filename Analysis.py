@@ -9,11 +9,11 @@ import seaborn as sns
 
 algo = sys.argv[1]
 if(algo == 'Random'):
-	fname = "logs_random.txt"
+	fname = "random.txt"
 elif(algo == 'Round'):
-	fname = "logs_roundRobin.txt"
+	fname = "round.txt"
 elif (algo == 'Least'):
-	fname = "logs_leastLoaded.txt"
+	fname = "least.txt"
 
 else:
 	exit(0)
