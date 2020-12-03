@@ -218,9 +218,9 @@ def scanSchedule():
 					j['reduce_tasks'] = j['reduce_tasks'][1:]
 					findTask=True
 					if(len(j['reduce_tasks'])==0):
-						jobLogsLock.acquire()
-						jobLogs[j['job_id']] = time.time()-jobLogs[j['job_id']] 
-						jobLogsLock.release()
+					#	jobLogsLock.acquire()
+					#	jobLogs[j['job_id']] = time.time()-jobLogs[j['job_id']] 
+					#	jobLogsLock.release()
 						requests.remove(j)
 						rOver = True
 					break
@@ -278,12 +278,19 @@ def recieveUpdates():
 			finishRequestsLock.release()
 		else:
 			finishReducerLock.acquire()
+			print(curr_task)
+			print(finishReducer[job_id])
 			finishReducer[job_id].remove(curr_task)
-			if(len(finishReducer)==0):
-				#jobLogsLock.acquire()
-				jobLogs[job_id] = curr_task['end_time'] - jobLogs[job_id]	# Update duration of job
-				#jobLogsLock.release()
-			finishReducerLock.release()
+			print(finishReducer[job_id])
+			if(len(finishReducer[job_id])==0):
+				finishReducerLock.release()
+				jobLogsLock.acquire()
+				print(jobLogs[job_id],' is job_id before')
+				jobLogs[job_id] = data_loaded['end_time'] - jobLogs[job_id]	# Update duration of job
+				print(jobLogs[job_id])
+				jobLogsLock.release()
+			else:
+				finishReducerLock.release()
 		#print(taskLogs,' that was TASK_LOG')
 		#print(currentConfiguration,' is current configuration')
 
