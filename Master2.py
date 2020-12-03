@@ -290,4 +290,19 @@ workerSocket2.close()
 workerSocket3.close()
 print(taskLogs)
 print(jobLogs)
+
+
+if(sys.argv[2] == 'random'):
+	fileName = "logs_random.txt"
+elif(sys.argv[2] == 'RR'):
+	fileName = "logs_roundRobin.txt"
+else:
+	fileName = "logs_leastLoaded.txt"
+	
+fp = open(fileName, 'w')
+fp.write(json.dumps(task_logs))
+fp.write('\n')
+fp.write(json.dumps(job_logs))
+fp.close()
+
 exit(0)
