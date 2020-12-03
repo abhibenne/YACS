@@ -300,9 +300,9 @@ else:
 	fileName = "logs_leastLoaded.txt"
 	
 fp = open(fileName, 'w')
-fp.write(json.dumps(task_logs))
+fp.write(json.dumps(taskLogs))
 fp.write('\n')
-fp.write(json.dumps(job_logs))
+fp.write(json.dumps(jobLogs))
 fp.close()
 
 exit(0)
