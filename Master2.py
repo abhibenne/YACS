@@ -147,6 +147,43 @@ def roundRobin(chosenTask):
 	#print('Task with task id ',chosenTask['task_id'],' is being scheduled on worker with id',currentConfiguration['workers'][workerNumber]['worker_id'])
 
 
+def roundRobin2(chosenTask):
+	numberOfWorkers = len(currentConfiguration['workers'])
+	workerNumber=0
+	workerId = 0
+	configurationLock.acquire()
+	copyConfig = copy.deepcopy(currentConfiguration['workers'])
+	copyConfig.sort(key=lambda x:x['worker_id'])
+	workerId = copyConfig[workerNumber]['worker_id']
+	while copyConfig[workerNumber]['slots'] == 0:
+		configurationLock.release()
+		time.sleep(1)
+		workerNumber = (workerNumber+1)%numberOfWorkers
+		configurationLock.acquire()
+		copyConfig = copy.deepcopy(currentConfiguration['workers'])
+		copyConfig.sort(key=lambda x:x['worker_id'])
+		workerId = copyConfig[workerNumber]['worker_id']
+	#currentConfiguration['workers'][workerNumber]['slots']-=1
+	#print(currentConfiguration)
+	#print("\n")
+	indexNumber=-1
+	#minLoadingIndex=currentConfiguration['workers'].find(currentConfiguration['workers']['worker_id']=minLoadingIndex)
+	for i in range(0,len(currentConfiguration['workers'])):
+		if(currentConfiguration['workers'][i]['worker_id']==workerId):
+			indexNumber=i
+			break
+	currentConfiguration['workers'][indexNumber]['slots']-=1
+	#print(currentConfiguration)
+	#print("\n")
+	#print(currentConfiguration['workers'][minLoadingIndex]['slots'],' is slots')
+	configurationLock.release()
+
+	#print(chosenTask)
+	sendToWorker(chosenTask,indexNumber)
+	#print('Task with task id ',chosenTask['task_id'],' is being scheduled on worker with id',currentConfiguration['workers'][workerNumber]['worker_id'])
+
+
+
 def leastLoaded(chosenTask):
 	numberOfWorkers = len(currentConfiguration['workers'])
 	workerNumber=0
@@ -253,7 +290,7 @@ def scanSchedule():
 				randomScheduling(chosenTask)
 				pass
 			elif findTask and scheduleMethod == 'Round':
-				roundRobin(chosenTask)
+				roundRobin2(chosenTask)
 				pass
 			elif findTask and scheduleMethod == 'Least':
 				leastLoaded(chosenTask)

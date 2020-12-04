@@ -46,6 +46,7 @@ def executeNotify():
 				executionListLock.release()
 
 				executionDetails(task)
+		#time.sleep(1)
 
 # listen to request
 thread1 = threading.Thread(target=listenRequest)
