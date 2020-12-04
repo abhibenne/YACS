@@ -163,6 +163,7 @@ def roundRobin2(chosenTask):
 		copyConfig = copy.deepcopy(currentConfiguration['workers'])
 		copyConfig.sort(key=lambda x:x['worker_id'])
 		workerId = copyConfig[workerNumber]['worker_id']
+	configurationLock.release()
 	#currentConfiguration['workers'][workerNumber]['slots']-=1
 	#print(currentConfiguration)
 	#print("\n")
@@ -172,6 +173,8 @@ def roundRobin2(chosenTask):
 		if(currentConfiguration['workers'][i]['worker_id']==workerId):
 			indexNumber=i
 			break
+
+	configurationLock.acquire()
 	currentConfiguration['workers'][indexNumber]['slots']-=1
 	#print(currentConfiguration)
 	#print("\n")
@@ -290,7 +293,7 @@ def scanSchedule():
 				randomScheduling(chosenTask)
 				pass
 			elif findTask and scheduleMethod == 'Round':
-				roundRobin2(chosenTask)
+				roundRobin(chosenTask)
 				pass
 			elif findTask and scheduleMethod == 'Least':
 				leastLoaded(chosenTask)
@@ -348,7 +351,9 @@ def recieveUpdates():
 				finishReducerLock.release()
 		#print(taskLogs,' that was TASK_LOG')
 		print("\n----*******----")
+		#configurationLock.acquire()
 		print(currentConfiguration,' is current configuration')
+		#configurationLock.release()
 		print("----*******----\n")
 
 thread1 = threading.Thread(target = acceptRequest)

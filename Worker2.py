@@ -10,6 +10,8 @@ import time
 executionList = []
 executionListLock = threading.Lock()
 
+#executionDuration = {}
+#executionDurationLock = threading.Lock()
 def listenRequest():
 	while 1:
 		requestSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -19,6 +21,10 @@ def listenRequest():
 		data_loaded = json.loads(data)
 		data_loaded['start_time'] = time.time()
 		data_loaded['end_time'] = data_loaded['start_time'] +data_loaded['duration']
+		#executionDurationLock.acquire()
+		#executionDuration[data_loaded['task_id']] = data_loaded['duration']
+		#executionDurationLock.release()
+		#time.sleep(data_loaded['duration'])
 		executionListLock.acquire()
 		executionList.append(data_loaded)
 		executionListLock.release()
@@ -40,13 +46,18 @@ def executeNotify():
 			currentTime = time.time()
 			if currentTime>=task['end_time']:
 				task['end_time'] = currentTime
-
 				executionListLock.acquire()
 				executionList.remove(task)
 				executionListLock.release()
-
 				executionDetails(task)
-		#time.sleep(1)
+			#executionDurationLock.acquire()
+			#executionDuration[task['task_id']] -=1
+			#if executionDuration[task['task_id']]==0:
+			#	executionDurationLock.release()
+			#else:
+			#	executionDurationLock.release()
+				#task['duration']-=1	
+		time.sleep(1)
 
 # listen to request
 thread1 = threading.Thread(target=listenRequest)
