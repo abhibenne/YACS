@@ -118,6 +118,7 @@ def randomScheduling(chosenTask):
 	configurationLock.acquire()
 	while currentConfiguration['workers'][workerNumber]['slots'] == 0:
 		configurationLock.release()
+		time.sleep(1)
 		workerNumber = np.random.randint(0,numberOfWorkers)
 		configurationLock.acquire()
 	currentConfiguration['workers'][workerNumber]['slots']-=1
@@ -134,6 +135,7 @@ def roundRobin(chosenTask):
 	configurationLock.acquire()
 	while currentConfiguration['workers'][workerNumber]['slots'] == 0:
 		configurationLock.release()
+		time.sleep(1)
 		workerNumber = (workerNumber+1)%numberOfWorkers
 		configurationLock.acquire()
 	currentConfiguration['workers'][workerNumber]['slots']-=1
@@ -148,33 +150,44 @@ def roundRobin(chosenTask):
 def leastLoaded(chosenTask):
 	numberOfWorkers = len(currentConfiguration['workers'])
 	workerNumber=0
-	minLoading = -1e9
-	minLoadingIndex = -1
 	configurationLock.acquire()
+	copyConfig = copy.deepcopy(currentConfiguration['workers'])
+	copyConfig.sort(key=lambda x:x['slots'],reverse=True)
+	minLoadingIndex = copyConfig[0]['worker_id']
 	#while currentConfiguration['workers'][workerNumber]['slots'] == 0:
-	for i in currentConfiguration['workers']:
-		noSlots = i['slots']
+	while copyConfig[0]['slots']==0:
 		configurationLock.release()
-		if minLoading<noSlots and noSlots!=0:
-			minLoading=noSlots
-			minLoadingIndex=workerNumber 
-		workerNumber = (workerNumber+1)
+		time.sleep(1)
+		configurationLock.acquire()
+		copyConfig = copy.deepcopy(currentConfiguration['workers'])
+		copyConfig.sort(key=lambda x:x['slots'],reverse=True)
+		minLoadingIndex = copyConfig[0]['worker_id']
+		#if minLoading<noSlots and noSlots!=0:
+		#minLoading=noSlots
+		#	minLoadingIndex=workerNumber 
+		#workerNumber = (workerNumber+1)
 		#if workerNumber==numberOfWorkers:
 		#	break;
-		configurationLock.acquire()
+		#configurationLock.acquire()
 	#print(currentConfiguration)
 	#print(minLoadingIndex)
 	configurationLock.release()
 	
-	if minLoading!=-1e9:
+	if minLoadingIndex!=-1:
 		configurationLock.acquire()
-		currentConfiguration['workers'][minLoadingIndex]['slots']-=1
-		print(currentConfiguration)
-		print("\n")
+		indexNumber=-1
+		#minLoadingIndex=currentConfiguration['workers'].find(currentConfiguration['workers']['worker_id']=minLoadingIndex)
+		for i in range(0,len(currentConfiguration['workers'])):
+			if(currentConfiguration['workers'][i]['worker_id']==minLoadingIndex):
+				indexNumber=i
+				break
+		currentConfiguration['workers'][indexNumber]['slots']-=1
+		#print(currentConfiguration)
+		#print("\n")
 		#print(currentConfiguration['workers'][minLoadingIndex]['slots'],' is slots')
 		configurationLock.release()
 		#print(chosenTask)
-		sendToWorker(chosenTask,minLoadingIndex)
+		sendToWorker(chosenTask,indexNumber)
 		#print('Task with task id ',chosenTask['task_id'],' is being scheduled on worker with id',currentConfiguration['workers'][minLoadingIndex]['worker_id'])
 
 
