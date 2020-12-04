@@ -121,6 +121,8 @@ def randomScheduling(chosenTask):
 		workerNumber = np.random.randint(0,numberOfWorkers)
 		configurationLock.acquire()
 	currentConfiguration['workers'][workerNumber]['slots']-=1
+	print(currentConfiguration)
+	print("\n")
 	configurationLock.release()
 	#print(chosenTask)
 	sendToWorker(chosenTask,workerNumber)
@@ -135,6 +137,8 @@ def roundRobin(chosenTask):
 		workerNumber = (workerNumber+1)%numberOfWorkers
 		configurationLock.acquire()
 	currentConfiguration['workers'][workerNumber]['slots']-=1
+	print(currentConfiguration)
+	print("\n")
 	configurationLock.release()
 	#print(chosenTask)
 	sendToWorker(chosenTask,workerNumber)
@@ -165,7 +169,8 @@ def leastLoaded(chosenTask):
 	if minLoading!=-1e9:
 		configurationLock.acquire()
 		currentConfiguration['workers'][minLoadingIndex]['slots']-=1
-		#print(currentConfiguration)
+		print(currentConfiguration)
+		print("\n")
 		#print(currentConfiguration['workers'][minLoadingIndex]['slots'],' is slots')
 		configurationLock.release()
 		#print(chosenTask)
@@ -278,21 +283,23 @@ def recieveUpdates():
 			finishRequestsLock.release()
 		else:
 			finishReducerLock.acquire()
-			print(curr_task)
-			print(finishReducer[job_id])
+			#print(curr_task)
+			#print(finishReducer[job_id])
 			finishReducer[job_id].remove(curr_task)
-			print(finishReducer[job_id])
+			#print(finishReducer[job_id])
 			if(len(finishReducer[job_id])==0):
 				finishReducerLock.release()
 				jobLogsLock.acquire()
-				print(jobLogs[job_id],' is job_id before')
+				#print(jobLogs[job_id],' is job_id before')
 				jobLogs[job_id] = data_loaded['end_time'] - jobLogs[job_id]	# Update duration of job
-				print(jobLogs[job_id])
+				#print(jobLogs[job_id])
 				jobLogsLock.release()
 			else:
 				finishReducerLock.release()
 		#print(taskLogs,' that was TASK_LOG')
-		#print(currentConfiguration,' is current configuration')
+		print("\n----*******----")
+		print(currentConfiguration,' is current configuration')
+		print("----*******----\n")
 
 thread1 = threading.Thread(target = acceptRequest)
 thread2 = threading.Thread(target = scanSchedule, daemon = True)
