@@ -82,13 +82,12 @@ def acceptRequest():
 			countJobs+=1
 			countJobsLock.release()
 			jobRequestLock.acquire()
-			jobRequest = data_loaded
+			#jobRequest = data_loaded
+			requests.append(jobRequest)
 			jobRequestLock.release()
 			jobLogsLock.acquire()
 			jobLogs[data_loaded['job_id']] = time.time()
 			jobLogsLock.release()
-
-			requests.append(jobRequest)
 			#print(jobRequest)
 			#print(countJobs)
 
@@ -249,8 +248,9 @@ def scanSchedule():
 			chosenTask = {}
 			rOver=False
 			findTask = False
-
+			jobRequestLock.acquire()
 			for j in requests:
+				jobRequestLock.release()
 				finishRequestsLock.acquire()
 				# mapper left so have to do mapper
 				if(len(j['map_tasks'])):
@@ -284,6 +284,7 @@ def scanSchedule():
 					break
 				else:
 					finishRequestsLock.release()
+					finishRequestsLock.acquire()
 			#if findTask:
 			#	finishRequestsLock.release()		
 			#if rOver:
@@ -293,7 +294,7 @@ def scanSchedule():
 				randomScheduling(chosenTask)
 				pass
 			elif findTask and scheduleMethod == 'Round':
-				roundRobin(chosenTask)
+				roundRobin2(chosenTask)
 				pass
 			elif findTask and scheduleMethod == 'Least':
 				leastLoaded(chosenTask)
@@ -355,6 +356,7 @@ def recieveUpdates():
 		print(currentConfiguration,' is current configuration')
 		#configurationLock.release()
 		print("----*******----\n")
+		print(data_loaded,' is from worker')
 
 thread1 = threading.Thread(target = acceptRequest)
 thread2 = threading.Thread(target = scanSchedule, daemon = True)
