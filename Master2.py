@@ -131,24 +131,6 @@ def randomScheduling(chosenTask):
 def roundRobin(chosenTask):
 	numberOfWorkers = len(currentConfiguration['workers'])
 	workerNumber=0
-	configurationLock.acquire()
-	while currentConfiguration['workers'][workerNumber]['slots'] == 0:
-		configurationLock.release()
-		time.sleep(1)
-		workerNumber = (workerNumber+1)%numberOfWorkers
-		configurationLock.acquire()
-	currentConfiguration['workers'][workerNumber]['slots']-=1
-	print(currentConfiguration)
-	print("\n")
-	configurationLock.release()
-	#print(chosenTask)
-	sendToWorker(chosenTask,workerNumber)
-	#print('Task with task id ',chosenTask['task_id'],' is being scheduled on worker with id',currentConfiguration['workers'][workerNumber]['worker_id'])
-
-
-def roundRobin2(chosenTask):
-	numberOfWorkers = len(currentConfiguration['workers'])
-	workerNumber=0
 	workerId = 0
 	configurationLock.acquire()
 	copyConfig = copy.deepcopy(currentConfiguration['workers'])
@@ -175,7 +157,7 @@ def roundRobin2(chosenTask):
 
 	configurationLock.acquire()
 	currentConfiguration['workers'][indexNumber]['slots']-=1
-	#print(currentConfiguration)
+	print(currentConfiguration)
 	#print("\n")
 	#print(currentConfiguration['workers'][minLoadingIndex]['slots'],' is slots')
 	configurationLock.release()
@@ -183,7 +165,6 @@ def roundRobin2(chosenTask):
 	#print(chosenTask)
 	sendToWorker(chosenTask,indexNumber)
 	#print('Task with task id ',chosenTask['task_id'],' is being scheduled on worker with id',currentConfiguration['workers'][workerNumber]['worker_id'])
-
 
 
 def leastLoaded(chosenTask):
@@ -208,7 +189,7 @@ def leastLoaded(chosenTask):
 		#if workerNumber==numberOfWorkers:
 		#	break;
 		#configurationLock.acquire()
-	#print(currentConfiguration)
+	print(currentConfiguration)
 	#print(minLoadingIndex)
 	configurationLock.release()
 	
@@ -352,9 +333,7 @@ def recieveUpdates():
 				finishReducerLock.release()
 		#print(taskLogs,' that was TASK_LOG')
 		print("\n----*******----")
-		#configurationLock.acquire()
 		print(currentConfiguration,' is current configuration')
-		#configurationLock.release()
 		print("----*******----\n")
 		print(data_loaded,' is from worker')
 
