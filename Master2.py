@@ -274,7 +274,7 @@ def scanSchedule():
 				randomScheduling(chosenTask)
 				pass
 			elif findTask and scheduleMethod == 'Round':
-				roundRobin2(chosenTask)
+				roundRobin(chosenTask)
 				pass
 			elif findTask and scheduleMethod == 'Least':
 				leastLoaded(chosenTask)
