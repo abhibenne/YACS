@@ -82,7 +82,7 @@ def acceptRequest():
 			countJobs+=1
 			countJobsLock.release()
 			jobRequestLock.acquire()
-			#jobRequest = data_loaded
+			jobRequest = data_loaded
 			requests.append(jobRequest)
 			jobRequestLock.release()
 			jobLogsLock.acquire()
@@ -229,9 +229,7 @@ def scanSchedule():
 			chosenTask = {}
 			rOver=False
 			findTask = False
-			jobRequestLock.acquire()
 			for j in requests:
-				jobRequestLock.release()
 				finishRequestsLock.acquire()
 				# mapper left so have to do mapper
 				if(len(j['map_tasks'])):
@@ -260,12 +258,13 @@ def scanSchedule():
 					#	jobLogsLock.acquire()
 					#	jobLogs[j['job_id']] = time.time()-jobLogs[j['job_id']] 
 					#	jobLogsLock.release()
+						jobRequestLock.acquire()
 						requests.remove(j)
+						jobRequestLock.release()
 						rOver = True
 					break
 				else:
 					finishRequestsLock.release()
-					finishRequestsLock.acquire()
 			#if findTask:
 			#	finishRequestsLock.release()		
 			#if rOver:
