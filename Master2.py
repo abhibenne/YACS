@@ -326,7 +326,7 @@ def recieveUpdates():
 				finishReducerLock.release()
 				jobLogsLock.acquire()
 				#print(jobLogs[job_id],' is job_id before')
-				jobLogs[job_id] = data_loaded['end_time'] - jobLogs[job_id]	# Update duration of job
+				jobLogs[job_id] = time.time() - jobLogs[job_id]#data_loaded['end_time'] - jobLogs[job_id]	# Update duration of job
 				#print(jobLogs[job_id])
 				jobLogsLock.release()
 			else:
