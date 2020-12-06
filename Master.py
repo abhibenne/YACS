@@ -139,7 +139,7 @@ def roundRobin(chosenTask):
 	while copyConfig[workerNumber]['slots'] == 0:
 		configurationLock.release()
 		time.sleep(1)
-		workerNumber = (workerNumber+1)%numberOfWorkers
+		workerNumber = (workerNumber+1)%3
 		configurationLock.acquire()
 		copyConfig = copy.deepcopy(currentConfiguration['workers'])
 		copyConfig.sort(key=lambda x:x['worker_id'])
@@ -334,7 +334,7 @@ def recieveUpdates():
 		print("\n----*******----")
 		print(currentConfiguration,' is current configuration')
 		print("----*******----\n")
-		print(data_loaded,' is from worker')
+		#print(data_loaded,' is from worker')
 
 thread1 = threading.Thread(target = acceptRequest)
 thread2 = threading.Thread(target = scanSchedule, daemon = True)
