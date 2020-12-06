@@ -139,7 +139,7 @@ def roundRobin(chosenTask):
 	while copyConfig[workerNumber]['slots'] == 0:
 		configurationLock.release()
 		time.sleep(1)
-		workerNumber = (workerNumber+1)%3
+		workerNumber = (workerNumber+1)%numberOfWorkers
 		configurationLock.acquire()
 		copyConfig = copy.deepcopy(currentConfiguration['workers'])
 		copyConfig.sort(key=lambda x:x['worker_id'])
