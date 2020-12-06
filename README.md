@@ -3,13 +3,14 @@ Big Data final project - YACS
 
 
 Execution:
-  1. python3 master.py config.json <scheduling_algorithm>           
+  1. python3 Master.py config.json <scheduling_algorithm>           
   // scheduling algorithm = Random or Round or Least
   2. python3 requests.py <no_of_requests>
-  3. python3 worker.py 4000 1
-  4. python3 worker.py 4001 2
-  5. python3 worker.py 4002 3
-  6. python3 Analysis.py <scheduling_algorithm>       
+  3. python3 Worker.py 4000 1
+  4. python3 Worker.py 4001 2
+  5. python3 Worker.py 4002 3
+  
+  A. python3 Analysis.py <scheduling_algorithm>      (Should be ran after master and worker 
   //scheduling_algorithm = Random or Round or Least
 
 
