@@ -8,11 +8,11 @@ import seaborn as sns
 
 
 algo = sys.argv[1]
-if(algo == 'Random'):
+if(algo == 'RANDOM'):
 	fname = "random.txt"
-elif(algo == 'Round'):
+elif(algo == 'RR'):
 	fname = "round.txt"
-elif (algo == 'Least'):
+elif (algo == 'LL'):
 	fname = "least.txt"
 
 else:
