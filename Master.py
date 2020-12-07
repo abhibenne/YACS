@@ -270,13 +270,13 @@ def scanSchedule():
 			#if rOver:
 				#requests = requests[1:]
 			#print('seems free')
-			if findTask and scheduleMethod == 'Random':
+			if findTask and scheduleMethod == 'RANDOM':
 				randomScheduling(chosenTask)
 				pass
-			elif findTask and scheduleMethod == 'Round':
+			elif findTask and scheduleMethod == 'RR':
 				roundRobin(chosenTask)
 				pass
-			elif findTask and scheduleMethod == 'Least':
+			elif findTask and scheduleMethod == 'LL':
 				leastLoaded(chosenTask)
 				pass
 
@@ -361,12 +361,12 @@ print("Job Logs:\n")
 print(jobLogs)
 
 
-if(sys.argv[2] == 'Random'):
+if(sys.argv[2] == 'RANDOM'):
 	fileName = "random.txt"
-elif(sys.argv[2] == 'Round'):
+elif(sys.argv[2] == 'RR'):
 	fileName = "round.txt"
 else:
-	fileName = "least.txt"
+	fileName = "LL.txt"
 	
 fp = open(fileName, 'w')
 fp.write(json.dumps(taskLogs))
